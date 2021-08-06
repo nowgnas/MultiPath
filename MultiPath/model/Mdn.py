@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
+
 sys.path.insert(0, "../")
 
 from src.utils_learning import *
@@ -102,7 +103,7 @@ class Mdn(tf.keras.Model):
             _x1 = keras.layers.Dense(units=256, activation='relu')(_x_in_f)
             _xo = keras.layers.Dense(units=128, activation='relu')(_x1)
 
-            _f_in = keras.Input(shape=(self.dim_f, ), dtype=tf.float32)
+            _f_in = keras.Input(shape=(self.dim_f,), dtype=tf.float32)
             _f1 = keras.layers.Dense(units=256, activation='relu')(_f_in)
             _fo = keras.layers.Dense(units=128, activation='relu')(_f1)
 
@@ -115,29 +116,33 @@ class Mdn(tf.keras.Model):
         self.nn = keras.Model(inputs_nn, outputs_nn)
         print("Build model")
 
-    def get_mdn_gmmdiag(self, x_data, f_data, i_data):
+    def get_mdn_gmmdiag(self, x_data, f_data, i_data, y_data):
         """ Gets Gaussian mixture model (diag). """
 
         if self.use_image == 1:
             nn_out = self.nn([x_data, i_data])
         else:
             nn_out = self.nn([x_data, f_data])
-
+        print(nn_out)
+        print([x_data, f_data])
+        print(y_data)
         # Set Gaussian mixture model
         indexes_split = [self.dim_y * self.n_component_gmm, self.dim_y * self.n_component_gmm, self.n_component_gmm]
         mu_gmm, log_sigma_gmm_tmp, log_frac_gmm = tf.split(nn_out, indexes_split, axis=1)
+        print(f' mu {mu_gmm.shape} log sigma {log_sigma_gmm_tmp.shape} log frac {log_frac_gmm.shape}')
         mu_gmm, log_sigma_gmm, log_pi_gmm = get_gmmdiag_components(self.dim_y, self.n_component_gmm, mu_gmm,
                                                                    log_sigma_gmm_tmp, log_frac_gmm,
                                                                    log_sigma_min=-10.0, log_sigma_max=10.0)
 
         gmm_diag = get_gmmdiag(mu_gmm, log_sigma_gmm, log_pi_gmm)
+        print(gmm_diag)
 
         return gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm
 
-    def sample(self, x_data, f_data, i_data, num_sample=1):
+    def sample(self, x_data, f_data, i_data, y_data, num_sample=1):
         """ Samples from GMM. """
 
-        gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data)
+        gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
         y_sample = sample_gmmdiag(gmm_diag, num_sample=num_sample)
 
         return y_sample
@@ -147,7 +152,7 @@ class Mdn(tf.keras.Model):
     def compute_loss(self, x_data, f_data, i_data, y_data):
         """" Computes loss for neg-log-likelihood. """
         y_data_r = keras.backend.reshape(y_data, shape=(-1, self.h_y * self.dim_p))
-        gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data)
+        gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
         loss_nll = get_negloglikelihood_gmmdiag(gmm_diag, y_data_r)
         return loss_nll
 

@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf  # tensorflow-2.0
 from tensorflow import keras
 import tensorflow_probability as tfp  # tensorflow-probability-0.8
+
 ds = tfp.distributions
 
 
@@ -150,12 +151,13 @@ def get_gmmdiag_components(dim_x, n_component_gmm, tensor_mu, tensor_log_sigma, 
         log_sigma_max: maximum log-sigma
     Returns:
         mu_gmm: mean [batch_size, dim_x, n_component]
-        log_sigma_gmm: log of standard-deviation [batch_size, dim_x, n_component]
+        log_sigma_gmm: log of standard-derivation [batch_size, dim_x, n_component]
         log_pi_gmm: log of fraction [batch_size, n_component]
     """
     # Reshape
     tensor_mu = keras.backend.reshape(tensor_mu, [-1, dim_x, n_component_gmm])  # [..., dim, num_of_components]
-    tensor_log_sigma = keras.backend.reshape(tensor_log_sigma, [-1, dim_x, n_component_gmm])  # [..., dim, num_of_components]
+    tensor_log_sigma = keras.backend.reshape(tensor_log_sigma,
+                                             [-1, dim_x, n_component_gmm])  # [..., dim, num_of_components]
     tensor_log_pi = keras.backend.reshape(tensor_log_pi, [-1, n_component_gmm])  # [..., num_of_components]
 
     mu_gmm, _log_sigma_gmm, _log_pi_gmm = tensor_mu, tensor_log_sigma, tensor_log_pi
@@ -222,7 +224,7 @@ def get_gmm2d_components(n_component_gmm, tensor_mu, tensor_log_sigma, tensor_lo
         log_sigma_max: maximum log-sigma
     Returns:
         mu_gmm: mean [batch_size, 2, n_component]
-        log_sigma_gmm: log of standard-deviation [batch_size, 2, n_component]
+        log_sigma_gmm: log of standard-derivation [batch_size, 2, n_component]
         log_pi_gmm: log of fraction [batch_size, n_component]
         rho_gmm: correlation [batch_size, n_component]
         one_minus_rho_gmm: 1 - correlation [batch_size, n_component]
@@ -233,7 +235,8 @@ def get_gmm2d_components(n_component_gmm, tensor_mu, tensor_log_sigma, tensor_lo
 
     # Reshape
     tensor_mu = keras.backend.reshape(tensor_mu, [-1, dim_x, n_component_gmm])  # [..., 2, num_of_components]
-    tensor_log_sigma = keras.backend.reshape(tensor_log_sigma, [-1, dim_x, n_component_gmm])  # [..., 2, num_of_components]
+    tensor_log_sigma = keras.backend.reshape(tensor_log_sigma,
+                                             [-1, dim_x, n_component_gmm])  # [..., 2, num_of_components]
     tensor_log_pi = keras.backend.reshape(tensor_log_pi, [-1, n_component_gmm])  # [..., num_of_components]
     tensor_rho = keras.backend.reshape(tensor_rho, [-1, n_component_gmm])  # [..., num_of_components]
 
