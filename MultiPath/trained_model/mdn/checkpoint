@@ -1,2 +1,2 @@
-model_checkpoint_path: "mdn_i6o18_sp00_n12_f_e50"
-all_model_checkpoint_paths: "mdn_i6o18_sp00_n12_f_e50"
+model_checkpoint_path: "mdn_i6o18_sp00_n12_f_e40"
+all_model_checkpoint_paths: "mdn_i6o18_sp00_n12_f_e40"

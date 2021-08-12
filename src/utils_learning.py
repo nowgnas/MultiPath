@@ -156,6 +156,7 @@ def get_gmmdiag_components(dim_x, n_component_gmm, tensor_mu, tensor_log_sigma, 
     """
     # Reshape
     tensor_mu = keras.backend.reshape(tensor_mu, [-1, dim_x, n_component_gmm])  # [..., dim, num_of_components]
+    print(f'tensor mu {tensor_mu.shape}')
     tensor_log_sigma = keras.backend.reshape(tensor_log_sigma,
                                              [-1, dim_x, n_component_gmm])  # [..., dim, num_of_components]
     tensor_log_pi = keras.backend.reshape(tensor_log_pi, [-1, n_component_gmm])  # [..., num_of_components]
@@ -183,6 +184,7 @@ def get_gmmdiag(mu, log_sigma, log_pi):
     cat = ds.Categorical(probs=frac_gmm)
     cs = [ds.MultivariateNormalDiag(loc=mu, scale_diag=sigma) \
           for mu, sigma in zip(mu_gmm_list, sigma_gmm_list)]
+    print(cs)
 
     gmm_diag = ds.Mixture(cat=cat, components=cs)
 
