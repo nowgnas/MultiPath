@@ -10,10 +10,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import sys
 
+import scipy.spatial.distance as ssd
+
 sys.path.insert(0, "../")
 
 from src.multiPath_utils_learning import *
 import tensorflow_probability as tfp  # tensorflow-probability-0.8
+ds = tfp.distributions
 
 
 def get_default_hparams():
@@ -130,31 +133,34 @@ class Mdn(tf.keras.Model):
         # Set Gaussian mixture model
         indexes_split = [self.dim_y * self.n_component_gmm, self.dim_y * self.n_component_gmm, self.n_component_gmm]
         k = 3
+
+        # TODO: a_k와　data_y　유사도　비교　후　가까운　k　구하기
         mu_gmm, log_sigma_gmm_tmp, log_frac_gmm = tf.split(nn_out, indexes_split, axis=1)
-        data_y = tf.reshape(y_data, (-1, 36))
-        data_mu = tf.reshape(mu_gmm, (-1, 12, 36))
+        data_y = tf.reshape(y_data, (-1, 36))  # tensor
+        data_mu = tf.reshape(mu_gmm, (-1, 12, 36))  # tensor
         data_sigma = tf.reshape(log_sigma_gmm_tmp, (-1, 12, 36))
-        sum_y_mu = data_y + data_mu[:, k, :]  # a_k (??) + mu
+
+        # # 유클리디안　거리　
+        # y_list_1, y_list_2 = tf.unstack(data_y, axis=1)
+
+        # a_k (??) + mu
+        sum_y_mu = data_y + data_mu[:, k, :]
         # sigma
         sigma_sel = data_sigma[:, k, :]
-
         # pi
         pi_sel = log_frac_gmm[:, k]
-
-        # TODO: Normal Distribution(a_k
 
         # cs = [ds.MultivariateNormalDiag(loc=mu, scale_diag=sigma) for mu, sigma in zip(sum_y_mu, sigma_sel)]
         mu_gmm, log_sigma_gmm, log_pi_gmm = get_gmmdiag_components(self.dim_y, 1, sum_y_mu,
                                                                    sigma_sel, pi_sel,
                                                                    log_sigma_min=-10.0, log_sigma_max=10.0)
 
-        gmm_diag = get_gmmdiag(mu_gmm, log_sigma_gmm, log_pi_gmm)
+        gmm_diag = get_gdiag(mu_gmm, log_sigma_gmm)
 
         return gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm
 
     def sample(self, x_data, f_data, i_data, y_data, num_sample=1):
-        """ Samples from GMM. """
-
+        """ Samples from GM. """
         gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
         y_sample = sample_gmmdiag(gmm_diag, num_sample=num_sample)
         return y_sample
@@ -163,10 +169,17 @@ class Mdn(tf.keras.Model):
     @tf.function
     def compute_loss(self, x_data, f_data, i_data, y_data):
         """" Computes loss for neg-log-likelihood. """
-        y_data_r = keras.backend.reshape(y_data, shape=(-1, self.h_y * self.dim_p))
-        gmm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
-        loss_nll = get_negloglikelihood_gmmdiag(gmm_diag, y_data_r)
-        return loss_nll
+        print(f' ydata {y_data}')
+        # TODO y data (63 36)
+        y_data_r = keras.backend.reshape(y_data, shape=(-1, self.h_y * self.dim_p, 1))
+        gm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
+        exp_pi = tf.math.exp(log_pi_gmm)
+        pi_cat = ds.Categorical(probs=exp_pi)
+
+        # TODO gm_diag sample, log pi sample , log pi prob
+        loss_nll = get_negloglikelihood_gmmdiag(gm_diag, y_data_r, pi_cat)  # log prob ok
+        print(loss_nll)
+        return 0
 
     # TRAIN -----------------------------------------------------------------------------------------------------------#
     def compute_gradients(self, x_data, f_data, i_data, y_data):

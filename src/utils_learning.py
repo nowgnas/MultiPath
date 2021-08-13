@@ -203,6 +203,7 @@ def get_negloglikelihood_gmmdiag(gmm_diag, x):
 def sample_gmmdiag(gmm_diag, num_sample=1):
     """ Samples from Gaussian mixture model (diag). """
     _sample_out = gmm_diag.sample(num_sample)
+    print(f'sample {_sample_out}  {type(_sample_out)}')
     sample_out = _sample_out.numpy()
 
     return sample_out
