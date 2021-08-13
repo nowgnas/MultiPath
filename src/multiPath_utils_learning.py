@@ -108,7 +108,7 @@ def get_negloglikelihood_gmmdiag(gmm_diag, x, log_pi):
     log_pi_prob = log_pi.log_prob(x)
     print(f'log prob {log_pi_prob}  log pi {log_pi}')
 
-    # TODO sum normal D log prob, pi log prob
+    # TODO sum normal D log prob, pi log prob lk
     neglog_likelihood = tf.negative(log_likelihood)
     loss_nll = tf.math.reduce_mean(neglog_likelihood, axis=-1)
 
