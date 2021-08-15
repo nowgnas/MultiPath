@@ -103,9 +103,12 @@ def get_gmmdiag(mu, log_sigma, log_pi):
 def get_negloglikelihood_gmmdiag(gmm_diag, x, log_pi):
     """ Gets negative log likelihood from Gaussian mixture model (diag). """
     # TODO reshape x (64 36 1)
-    log_likelihood = gmm_diag.log_prob(x)
+    normal_y = tf.reshape(x, (-1, 36, 1))
+    log_normal = gmm_diag.log_prob(normal_y)
     # TODO reshape x (64,)
-    log_pi_prob = log_pi.log_prob(x)
+    pi_y = tf.unstack(x, axis=1)
+    print(x)
+    log_pi_prob = log_pi.log_prob(pi_y)
     print(f'log prob {log_pi_prob}  log pi {log_pi}')
 
     # TODO sum normal D log prob, pi log prob lk

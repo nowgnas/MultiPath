@@ -171,7 +171,7 @@ class Mdn(tf.keras.Model):
         """" Computes loss for neg-log-likelihood. """
         print(f' ydata {y_data}')
         # TODO y data (63 36)
-        y_data_r = keras.backend.reshape(y_data, shape=(-1, self.h_y * self.dim_p, 1))
+        y_data_r = keras.backend.reshape(y_data, shape=(-1, self.h_y * self.dim_p))
         gm_diag, mu_gmm, log_sigma_gmm, log_pi_gmm = self.get_mdn_gmmdiag(x_data, f_data, i_data, y_data)
         exp_pi = tf.math.exp(log_pi_gmm)
         pi_cat = ds.Categorical(probs=exp_pi)
